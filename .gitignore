@@ -172,3 +172,191 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# ==========================================
+# HEAVY/LARGE FILES - Тяжелые файлы
+# ==========================================
+
+# Large data files / Большие файлы данных
+*.csv
+*.tsv
+*.dat
+*.data
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.xlsx
+*.xls
+
+# Database files / Файлы баз данных
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+*.mdb
+*.accdb
+
+# Model files / Файлы моделей
+*.pkl
+*.pickle
+*.joblib
+*.model
+*.h5
+*.pb
+*.ckpt
+*.pth
+*.pt
+*.weights
+*.bin
+
+# Large media files / Большие медиафайлы
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a
+*.aac
+*.mp4a
+*.m4v
+*.3gp
+*.3g2
+*.mj2
+
+# Large image files / Большие изображения
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.raw
+*.cr2
+*.nef
+*.arw
+*.dng
+*.psd
+*.ai
+*.eps
+*.svg
+*.webp
+
+# Archive files / Архивы
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tar.xz
+*.gz
+*.bz2
+*.xz
+*.Z
+
+# Log files / Лог файлы
+*.log
+*.out
+*.err
+logs/
+log/
+
+# Cache and temporary files / Кэш и временные файлы
+*.tmp
+*.temp
+*.cache
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter notebook checkpoints / Чекпоинты Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE files / Файлы IDE
+.vscode/
+.idea/
+*.sublime-*
+*.code-workspace
+
+# Node.js dependencies (if applicable) / Зависимости Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Docker files / Docker файлы
+*.dockerfile
+docker-compose.override.yml
+
+# Build outputs / Результаты сборки
+build/
+dist/
+out/
+target/
+
+# Size-based rules / Правила по размеру
+# Files larger than 100MB will be blocked by GitHub anyway
+# Файлы больше 100МБ все равно заблокированы GitHub
+
+# ==========================================
+# SECURITY / СЕКРЕТНЫЕ ФАЙЛЫ
+# ==========================================
+
+# Environment files / Файлы окружения
+.env*
+!.env.example
+!.env.template
+.environment
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# API Keys and secrets / API ключи и секреты
+*key*
+*secret*
+*token*
+*credentials*
+*.pem
+*.p12
+*.pfx
+*.keystore
+*config.json
+*settings.json
+secrets.txt
+keys.txt
+api_keys.txt
+
+# Backup files / Резервные копии
+*.bak
+*.backup
+*.old
+*.orig
+
+# OS generated files / Системные файлы
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary directories used by tools / Временные папки
+.tmp/
+.temp/
+tmp/
+temp/
