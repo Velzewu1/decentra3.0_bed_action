@@ -291,9 +291,9 @@ def optimize_hdbscan_clustering(ml_features_scaled, features_df):
                                 continue
                                 
                             try:
-                                clusterer = hdbscan.HDBSCAN(
-                                    min_cluster_size=min_cluster_size,
-                                    min_samples=min_samples,
+            clusterer = hdbscan.HDBSCAN(
+                min_cluster_size=min_cluster_size,
+                min_samples=min_samples,
                                     cluster_selection_epsilon=epsilon,
                                     cluster_selection_method=method,
                                     metric=metric,
@@ -303,17 +303,17 @@ def optimize_hdbscan_clustering(ml_features_scaled, features_df):
                                 )
                                 
                                 labels = clusterer.fit_predict(feature_data)
-                                
-                                n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-                                noise_ratio = np.sum(labels == -1) / len(labels)
-                                
+            
+            n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+            noise_ratio = np.sum(labels == -1) / len(labels)
+            
                                 # AGGRESSIVE criteria for maximum clusters and minimum noise
                                 if n_clusters >= 3 and noise_ratio < 0.4:  # At least 3 clusters, max 40% noise
-                                    non_noise = labels != -1
+                non_noise = labels != -1
                                     non_noise_count = np.sum(non_noise)
                                     
                                     if non_noise_count > len(labels) * 0.6:  # At least 60% non-noise
-                                        unique_clusters = len(set(labels[non_noise]))
+                    unique_clusters = len(set(labels[non_noise]))
                                         
                                         if unique_clusters >= 3:
                                             # Calculate silhouette score
@@ -977,7 +977,7 @@ if __name__ == "__main__":
     
     # Step 4: Get final labels from ultra-optimized HDBSCAN
     print(f"\n🎯 STEP 4: EXTRACTING {chosen_algorithm} RESULTS")
-    final_labels = algorithm_results[chosen_algorithm]['labels']
+        final_labels = algorithm_results[chosen_algorithm]['labels']
     
     print(f"   ✅ Final clusters: {algorithm_results[chosen_algorithm]['n_clusters']}")
     print(f"   ✅ Noise ratio: {algorithm_results[chosen_algorithm]['noise_ratio']:.1%}")

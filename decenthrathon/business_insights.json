@@ -1,0 +1,54 @@
+{
+  "timestamp": "2025-05-25T13:18:58.167391",
+  "insights": {
+    "Segment_0": {
+      "business_name": "Traditional Spenders",
+      "description": "This segment has moderate transaction frequency and high transaction amounts with a significant preference for traditional payment methods over digital wallets. They show moderate city diversity and low international activity.",
+      "recommendations": [
+        "Promote high-value savings and investment products",
+        "Introduce premium credit cards with benefits on traditional spending",
+        "Enhance customer loyalty through personalized financial advisory services"
+      ],
+      "revenue_opportunity": "Capitalize on high transaction values by offering tailored investment opportunities and premium banking services."
+    },
+    "Segment_1": {
+      "business_name": "Digital Natives",
+      "description": "Highly active in transaction frequency with a strong inclination towards digital wallet usage. This segment shows good city diversity but very low international transactions, indicating a domestic focus.",
+      "recommendations": [
+        "Develop partnerships with digital wallet providers to offer exclusive deals",
+        "Create digital-first banking products and services",
+        "Leverage data analytics to provide personalized offers and improve user experience"
+      ],
+      "revenue_opportunity": "Drive revenue through digital channels by offering tech-savvy financial products and leveraging partnerships with tech companies."
+    },
+    "Segment_2": {
+      "business_name": "Global Tech Enthusiasts",
+      "description": "This segment exhibits high transaction frequency and amounts with a preference for digital and contactless payments. They have the highest city and country diversity, indicating frequent international activity.",
+      "recommendations": [
+        "Offer multi-currency accounts and international transaction benefits",
+        "Promote travel-related insurance and benefits packages",
+        "Invest in technology to enhance security for international transactions"
+      ],
+      "revenue_opportunity": "Exploit the international and tech-savvy nature by offering global financial products and enhancing cross-border payment solutions."
+    }
+  },
+  "summary": {
+    "total_segments": 3,
+    "segment_names": [
+      "Traditional Spenders",
+      "Digital Natives",
+      "Global Tech Enthusiasts"
+    ],
+    "key_opportunities": [
+      "Digital transformation acceleration",
+      "Premium customer retention",
+      "Cross-selling optimization",
+      "Risk management enhancement"
+    ],
+    "expected_impact": {
+      "revenue_growth": "15-20%",
+      "customer_retention": "+10%",
+      "cross_sell_rate": "+25%"
+    }
+  }
+}
