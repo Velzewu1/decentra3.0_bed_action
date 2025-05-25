@@ -55,7 +55,7 @@ def setup_logging(level: str = 'INFO', log_file: Optional[str] = None) -> loggin
 
 def load_transaction_data(file_path: str, parse_dates: bool = True) -> pd.DataFrame:
     """
-    Загрузка транзакционных данных с валидацией
+    Загрузка транзакционных данных с валидацией (поддержка CSV и Parquet)
     
     Args:
         file_path: Путь к файлу с данными
@@ -73,11 +73,27 @@ def load_transaction_data(file_path: str, parse_dates: bool = True) -> pd.DataFr
         if not Path(file_path).exists():
             raise FileNotFoundError(f"Data file not found: {file_path}")
         
-        # Загружаем данные
-        if parse_dates:
-            df = pd.read_csv(file_path, parse_dates=['transaction_timestamp'])
+        # Определяем формат файла по расширению
+        file_extension = Path(file_path).suffix.lower()
+        
+        # Загружаем данные в зависимости от формата
+        if file_extension == '.parquet':
+            logger.info("📦 Loading Parquet file...")
+            df = pd.read_parquet(file_path)
+            # Для parquet файлов даты обычно уже корректно типизированы
+            if parse_dates and 'transaction_timestamp' in df.columns:
+                if not pd.api.types.is_datetime64_any_dtype(df['transaction_timestamp']):
+                    df['transaction_timestamp'] = pd.to_datetime(df['transaction_timestamp'])
+        
+        elif file_extension == '.csv':
+            logger.info("📄 Loading CSV file...")
+            if parse_dates:
+                df = pd.read_csv(file_path, parse_dates=['transaction_timestamp'])
+            else:
+                df = pd.read_csv(file_path)
+        
         else:
-            df = pd.read_csv(file_path)
+            raise ValueError(f"Unsupported file format: {file_extension}. Use .csv or .parquet")
         
         logger.info(f"✅ Loaded {len(df):,} transactions for {df['card_id'].nunique():,} customers")
         
