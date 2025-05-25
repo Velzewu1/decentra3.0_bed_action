@@ -56,8 +56,8 @@ class Config:
         """Параметры для кластеризации"""
         # Clustering Configuration
         self.CLUSTERING_PARAMS = {
-            # Выбор алгоритма: 'hdbscan', 'gmm', 'kmeans'
-            'algorithm': 'gmm',  # Используем GMM для сбалансированных кластеров
+            # Выбор алгоритма: 'hdbscan', 'gmm', 'gmm_auto', 'kmeans'
+            'algorithm': 'gmm_auto',  # Автоматическое определение количества компонентов через BIC/AIC
             
             # HDBSCAN параметры (оставляем для совместимости)
             'min_cluster_size_range': [5, 10, 15, 20, 30, 50],
@@ -69,13 +69,19 @@ class Config:
             'core_dist_n_jobs': -1,
             'random_state': None,  # HDBSCAN в нашей версии не поддерживает random_state
             
-            # GMM параметры (новые)
+            # GMM параметры (ручной режим)
             'gmm_n_components_range': [3, 4, 5, 6, 7],
             'gmm_covariance_type': ['full', 'tied', 'diag', 'spherical'],
             'gmm_init_params': 'kmeans',
             'gmm_max_iter': 100,
             'gmm_tol': 1e-3,
             'gmm_random_state': 42,
+            
+            # GMM Auto параметры (автоматическое определение)
+            'gmm_auto_min_components': 2,  # Минимальное количество компонентов для тестирования
+            'gmm_auto_max_components': 8,  # Максимальное количество компонентов для тестирования  
+            'gmm_auto_criterion': 'combined',  # 'bic', 'aic', 'combined'
+            # combined = 50% BIC + 30% balance + 20% silhouette
             
             # K-Means параметры (новые)
             'kmeans_n_clusters_range': [3, 4, 5, 6, 7, 8],
