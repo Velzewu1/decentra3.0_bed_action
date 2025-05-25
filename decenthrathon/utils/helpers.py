@@ -14,7 +14,7 @@ import warnings
 
 def setup_logging(level: str = 'INFO', log_file: Optional[str] = None) -> logging.Logger:
     """
-    Настройка централизованного логирования
+    Настройка логирования
     
     Args:
         level: Уровень логирования (DEBUG, INFO, WARNING, ERROR)
@@ -55,7 +55,7 @@ def setup_logging(level: str = 'INFO', log_file: Optional[str] = None) -> loggin
 
 def load_transaction_data(file_path: str, parse_dates: bool = True) -> pd.DataFrame:
     """
-    Загрузка транзакционных данных с валидацией (поддержка CSV и Parquet)
+    Загрузка транзакционных данных с автоопределением формата
     
     Args:
         file_path: Путь к файлу с данными
@@ -67,18 +67,18 @@ def load_transaction_data(file_path: str, parse_dates: bool = True) -> pd.DataFr
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info(f"📁 Loading transaction data from {file_path}...")
+        logger.info(f"Читаем данные из {file_path}")
         
         # Проверяем существование файла
         if not Path(file_path).exists():
-            raise FileNotFoundError(f"Data file not found: {file_path}")
+            raise FileNotFoundError(f"Файл не найден: {file_path}")
         
         # Определяем формат файла по расширению
         file_extension = Path(file_path).suffix.lower()
         
-        # Загружаем данные в зависимости от формата
+        # Загружаем в зависимости от формата
         if file_extension == '.parquet':
-            logger.info("📦 Loading Parquet file...")
+            logger.info("Читаем Parquet файл")
             df = pd.read_parquet(file_path)
             # Для parquet файлов даты обычно уже корректно типизированы
             if parse_dates and 'transaction_timestamp' in df.columns:
@@ -86,26 +86,26 @@ def load_transaction_data(file_path: str, parse_dates: bool = True) -> pd.DataFr
                     df['transaction_timestamp'] = pd.to_datetime(df['transaction_timestamp'])
         
         elif file_extension == '.csv':
-            logger.info("📄 Loading CSV file...")
+            logger.info("Читаем CSV файл")
             if parse_dates:
                 df = pd.read_csv(file_path, parse_dates=['transaction_timestamp'])
             else:
                 df = pd.read_csv(file_path)
         
         else:
-            raise ValueError(f"Unsupported file format: {file_extension}. Use .csv or .parquet")
+            raise ValueError(f"Не поддерживаемый формат: {file_extension}. Используйте .csv или .parquet")
         
-        logger.info(f"✅ Loaded {len(df):,} transactions for {df['card_id'].nunique():,} customers")
+        logger.info(f"Загружено {len(df):,} транзакций для {df['card_id'].nunique():,} клиентов")
         
         return df
         
     except Exception as e:
-        logger.error(f"❌ Error loading data: {e}")
+        logger.error(f"Ошибка загрузки данных: {e}")
         raise
 
 def validate_dataframe_schema(df: pd.DataFrame, expected_columns: List[str]) -> bool:
     """
-    Валидация схемы DataFrame
+    Проверяем схему DataFrame
     
     Args:
         df: DataFrame для проверки
@@ -116,60 +116,60 @@ def validate_dataframe_schema(df: pd.DataFrame, expected_columns: List[str]) -> 
     """
     logger = logging.getLogger(__name__)
     
-    logger.info(f"🔍 Validating dataframe schema...")
-    logger.info(f"📊 Dataset columns ({len(df.columns)}): {list(df.columns)}")
+    logger.info(f"Проверяем данные")
+    logger.info(f"В dataset {len(df.columns)} колонок: {list(df.columns)}")
     
     # Проверяем наличие ключевых колонок
     missing_columns = set(expected_columns) - set(df.columns)
     if missing_columns:
-        logger.warning(f"⚠️ Missing columns: {missing_columns}")
+        logger.warning(f"Отсутствуют колонки: {missing_columns}")
         return False
     
     # Проверяем типы данных
     if 'transaction_timestamp' in df.columns:
         if not pd.api.types.is_datetime64_any_dtype(df['transaction_timestamp']):
-            logger.warning("⚠️ transaction_timestamp is not datetime type")
+            logger.warning("transaction_timestamp не является datetime типом")
             return False
     
     if 'card_id' in df.columns:
         if df['card_id'].isnull().any():
-            logger.warning("⚠️ Found null values in card_id")
+            logger.warning("Найдены пустые значения в card_id")
             return False
     
     if 'transaction_amount_kzt' in df.columns:
         if not pd.api.types.is_numeric_dtype(df['transaction_amount_kzt']):
-            logger.warning("⚠️ transaction_amount_kzt is not numeric")
+            logger.warning("transaction_amount_kzt не является числовым типом")
             return False
     
-    logger.info(f"✅ Schema validation passed - {len(expected_columns)} expected fields found")
+    logger.info(f"Проверка пройдена - найдено {len(expected_columns)} нужных полей")
     return True
 
 def validate_features_dataframe(features_df: pd.DataFrame) -> bool:
     """
-    Валидация DataFrame с фичами
+    Проверяем DataFrame с фичами
     
     Args:
-        features_df: DataFrame с feature engineering результатами
+        features_df: DataFrame с результатами feature engineering
     
     Returns:
         True если валидация прошла успешно
     """
     logger = logging.getLogger(__name__)
     
-    logger.info("🔍 Validating features dataframe...")
+    logger.info("Проверяем сгенерированные фичи")
     
     # Проверяем обязательные колонки
     required_cols = ['card_id']
     missing_required = set(required_cols) - set(features_df.columns)
     if missing_required:
-        logger.error(f"❌ Missing required columns: {missing_required}")
+        logger.error(f"Отсутствуют обязательные колонки: {missing_required}")
         return False
     
     # Проверяем на NaN значения
     nan_cols = features_df.columns[features_df.isnull().any()].tolist()
     if nan_cols:
-        logger.warning(f"⚠️ Found NaN values in columns: {nan_cols}")
-        logger.info("💡 NaN values will be filled with 0")
+        logger.warning(f"Найдены NaN значения в колонках: {nan_cols}")
+        logger.info("NaN будут заполнены нулями")
     
     # Проверяем на infinite значения
     numeric_cols = features_df.select_dtypes(include=[np.number]).columns
@@ -179,15 +179,15 @@ def validate_features_dataframe(features_df: pd.DataFrame) -> bool:
             inf_cols.append(col)
     
     if inf_cols:
-        logger.warning(f"⚠️ Found infinite values in columns: {inf_cols}")
+        logger.warning(f"Найдены бесконечные значения в колонках: {inf_cols}")
         return False
     
     # Проверяем размерность
     if len(features_df) == 0:
-        logger.error("❌ Features dataframe is empty")
+        logger.error("DataFrame с фичами пуст")
         return False
     
-    logger.info(f"✅ Features validation passed - {len(features_df)} customers, {len(features_df.columns)-1} features")
+    logger.info(f"Валидация ОК - {len(features_df)} клиентов, {len(features_df.columns)-1} фичей")
     return True
 
 def clean_features_dataframe(features_df: pd.DataFrame) -> pd.DataFrame:
@@ -202,7 +202,7 @@ def clean_features_dataframe(features_df: pd.DataFrame) -> pd.DataFrame:
     """
     logger = logging.getLogger(__name__)
     
-    logger.info("🧹 Cleaning features dataframe...")
+    logger.info("Чистим данные")
     
     # Создаем копию
     cleaned_df = features_df.copy()
@@ -212,7 +212,7 @@ def clean_features_dataframe(features_df: pd.DataFrame) -> pd.DataFrame:
     cleaned_df = cleaned_df.fillna(0)
     
     if nan_count_before > 0:
-        logger.info(f"✅ Filled {nan_count_before} NaN values with 0")
+        logger.info(f"Заполнили {nan_count_before} NaN значений нулями")
     
     # Заменяем infinite значения
     numeric_cols = cleaned_df.select_dtypes(include=[np.number]).columns
@@ -230,9 +230,9 @@ def clean_features_dataframe(features_df: pd.DataFrame) -> pd.DataFrame:
             cleaned_df.loc[inf_mask & (cleaned_df[col] < 0), col] = min_finite
     
     if inf_count > 0:
-        logger.info(f"✅ Replaced {inf_count} infinite values")
+        logger.info(f"Заменили {inf_count} бесконечных значений")
     
-    logger.info(f"✅ Features cleaned - shape: {cleaned_df.shape}")
+    logger.info(f"Готово - размерность: {cleaned_df.shape}")
     return cleaned_df
 
 def save_dataframe(df: pd.DataFrame, file_path: str, format: str = 'parquet') -> bool:
@@ -250,7 +250,7 @@ def save_dataframe(df: pd.DataFrame, file_path: str, format: str = 'parquet') ->
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info(f"💾 Saving dataframe to {file_path} ({format} format)...")
+        logger.info(f"Сохраняем в {file_path} ({format})")
         
         if format.lower() == 'parquet':
             df.to_parquet(file_path, index=False)
@@ -259,15 +259,15 @@ def save_dataframe(df: pd.DataFrame, file_path: str, format: str = 'parquet') ->
         elif format.lower() == 'json':
             df.to_json(file_path, indent=2)
         else:
-            raise ValueError(f"Unsupported format: {format}")
+            raise ValueError(f"Не поддерживаемый формат: {format}")
         
         file_size = Path(file_path).stat().st_size / (1024 * 1024)  # MB
-        logger.info(f"✅ Saved successfully - {file_size:.2f} MB")
+        logger.info(f"Сохранено - {file_size:.2f} MB")
         
         return True
         
     except Exception as e:
-        logger.error(f"❌ Error saving dataframe: {e}")
+        logger.error(f"Ошибка сохранения: {e}")
         return False
 
 def save_json(data: Dict[str, Any], file_path: str) -> bool:
@@ -286,21 +286,21 @@ def save_json(data: Dict[str, Any], file_path: str) -> bool:
     try:
         import json
         
-        logger.info(f"💾 Saving JSON to {file_path}...")
+        logger.info(f"Сохраняем JSON в {file_path}")
         
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False, default=str)
         
-        logger.info(f"✅ JSON saved successfully")
+        logger.info(f"JSON готов")
         return True
         
     except Exception as e:
-        logger.error(f"❌ Error saving JSON: {e}")
+        logger.error(f"Ошибка сохранения JSON: {e}")
         return False
 
 def print_dataframe_info(df: pd.DataFrame, name: str = "DataFrame") -> None:
     """
-    Вывод краткой информации о DataFrame
+    Выводим краткую информацию о DataFrame
     
     Args:
         df: DataFrame для анализа
@@ -308,37 +308,38 @@ def print_dataframe_info(df: pd.DataFrame, name: str = "DataFrame") -> None:
     """
     logger = logging.getLogger(__name__)
     
-    logger.info(f"📊 {name} Info:")
-    logger.info(f"   Shape: {df.shape}")
-    logger.info(f"   Memory usage: {df.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB")
+    logger.info(f"Инфо по {name}:")
+    logger.info(f"   Размерность: {df.shape}")
+    logger.info(f"   Память: {df.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB")
     
     # Информация о типах данных
     dtype_counts = df.dtypes.value_counts()
-    logger.info(f"   Data types: {dict(dtype_counts)}")
+    logger.info(f"   Типы данных: {dict(dtype_counts)}")
     
     # Информация о missing values
     missing_count = df.isnull().sum().sum()
     if missing_count > 0:
-        logger.info(f"   Missing values: {missing_count}")
+        logger.info(f"   Пропуски: {missing_count}")
     
     # Дубликаты
     duplicates = df.duplicated().sum()
     if duplicates > 0:
-        logger.info(f"   Duplicates: {duplicates}")
+        logger.info(f"   Дубликаты: {duplicates}")
 
 def set_random_state(seed: int = 42) -> None:
     """
-    Фиксация random state для воспроизводимости
+    Фиксируем random state для воспроизводимости результатов
     
     Args:
-        seed: Значение seed
+        seed: Значение seed для воспроизводимости
     """
     logger = logging.getLogger(__name__)
     
-    logger.info(f"🎲 Setting random state to {seed} for reproducibility...")
+    logger.info(f"Устанавливаем seed = {seed}")
     
     import random
     import numpy as np
+    import os
     
     # Python random
     random.seed(seed)
@@ -346,8 +347,44 @@ def set_random_state(seed: int = 42) -> None:
     # NumPy random
     np.random.seed(seed)
     
-    # Для scikit-learn будем передавать random_state в параметрах
-    logger.info("✅ Random state fixed for reproducibility")
+    # TensorFlow (если используется)
+    try:
+        import tensorflow as tf
+        tf.random.set_seed(seed)
+        logger.info("   TensorFlow готов")
+    except ImportError:
+        pass
+    
+    # PyTorch (если используется)
+    try:
+        import torch
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+        logger.info("   PyTorch готов")
+    except ImportError:
+        pass
+    
+    # Scikit-learn использует NumPy random, но добавляем переменную окружения
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    
+    # Для HDBSCAN и других библиотек, которые могут использовать системное время
+    try:
+        import hdbscan
+        # HDBSCAN не имеет глобального random_state, устанавливается через параметры
+        logger.info("   HDBSCAN готов")
+    except ImportError:
+        pass
+    
+    # Для UMAP (если используется)
+    try:
+        import umap
+        logger.info("   UMAP готов")
+    except ImportError:
+        pass
+    
+    logger.info(f"Seed {seed} установлен везде")
 
 # Инициализируем логирование при импорте модуля
 setup_logging() 

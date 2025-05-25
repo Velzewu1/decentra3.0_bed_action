@@ -34,8 +34,8 @@ class FeatureEngineer:
         - GEOGRAPHICAL: Location diversity (lifestyle indicator)
         """
         
-        logger.info("🔧 FEATURE ENGINEERING: Creating business-driven features...")
-        logger.info(f"📊 Available columns: {list(df.columns)}")
+        logger.info("FEATURE ENGINEERING: Creating business-driven features...")
+        logger.info(f"Available columns: {list(df.columns)}")
         
         # Создаем временные фичи
         df = self._create_time_features(df)
@@ -52,13 +52,13 @@ class FeatureEngineer:
         # Очищаем данные
         features = features.fillna(0)
         
-        logger.info(f"✅ Created {len(features.columns)-1} features with strong business rationale")
-        logger.info("📈 Features categories:")
-        logger.info("   • FREQUENCY: tx_count, tx_frequency, days_active")
-        logger.info("   • MONETARY: avg_amount, total_amount, amount_volatility, CLV")
-        logger.info("   • BEHAVIORAL: digital_wallet_ratio, contactless_ratio, time patterns")
-        logger.info("   • GEOGRAPHICAL: city_diversity, country_diversity, mcc_diversity")
-        logger.info("   • DERIVED: payment_sophistication, spending_consistency")
+        logger.info(f"Создано {len(features.columns)-1} фичей с бизнес-логикой")
+        logger.info("Категории фичей:")
+        logger.info("   FREQUENCY: tx_count, tx_frequency, days_active")
+        logger.info("   MONETARY: avg_amount, total_amount, amount_volatility, CLV")
+        logger.info("   BEHAVIORAL: digital_wallet_ratio, contactless_ratio, time patterns")
+        logger.info("   GEOGRAPHICAL: city_diversity, country_diversity, mcc_diversity")
+        logger.info("   DERIVED: payment_sophistication, spending_consistency")
         
         return features
     
@@ -189,11 +189,11 @@ class DataPreprocessor:
         4. PCA
         5. Power transformation
         """
-        logger.info("🔬 PREPROCESSING PIPELINE: Preparing data for clustering...")
+        logger.info("PREPROCESSING PIPELINE: Preparing data for clustering...")
         
         # Удаляем card_id
         ml_features = features_df.drop(['card_id'], axis=1)
-        logger.info(f"📊 Features shape: {ml_features.shape}")
+        logger.info(f"Features shape: {ml_features.shape}")
         
         # Стандартизация
         ml_features_scaled = self._apply_scaling(ml_features)
@@ -217,11 +217,11 @@ class DataPreprocessor:
             'pca_variance_explained': self.pca.explained_variance_ratio_.sum() if self.pca else None
         }
         
-        logger.info("✅ Preprocessing completed")
-        logger.info(f"   Original: {preprocessing_info['original_shape']}")
-        logger.info(f"   Final: {preprocessing_info['final_shape']}")
+        logger.info("Preprocessing готов")
+        logger.info(f"   Исходно: {preprocessing_info['original_shape']}")
+        logger.info(f"   Итого: {preprocessing_info['final_shape']}")
         if preprocessing_info['pca_variance_explained']:
-            logger.info(f"   PCA variance retained: {preprocessing_info['pca_variance_explained']:.1%}")
+            logger.info(f"   PCA сохранил: {preprocessing_info['pca_variance_explained']:.1%} дисперсии")
         
         return ml_features, ml_features_final, preprocessing_info
     
@@ -235,7 +235,7 @@ class DataPreprocessor:
             self.scaler = StandardScaler()
         
         ml_features_scaled = self.scaler.fit_transform(ml_features)
-        logger.info(f"✅ Applied {scaler_type} scaling")
+        logger.info(f"Applied {scaler_type} scaling")
         
         return ml_features_scaled
     
@@ -254,10 +254,10 @@ class DataPreprocessor:
         if to_remove:
             keep_indices = [i for i in range(ml_features_scaled.shape[1]) if i not in to_remove]
             ml_features_decorr = ml_features_scaled[:, keep_indices]
-            logger.info(f"🎯 Removed {len(to_remove)} highly correlated features (threshold={threshold})")
+            logger.info(f"Removed {len(to_remove)} highly correlated features (threshold={threshold})")
         else:
             ml_features_decorr = ml_features_scaled
-            logger.info("✅ No highly correlated features found")
+            logger.info("No highly correlated features found")
         
         return ml_features_decorr
     
@@ -270,7 +270,7 @@ class DataPreprocessor:
         ml_features_pca = self.pca.fit_transform(ml_features_decorr)
         
         explained_variance = np.sum(self.pca.explained_variance_ratio_)
-        logger.info(f"📊 PCA: {ml_features_pca.shape[1]} components, {explained_variance:.1%} variance retained")
+        logger.info(f"PCA: {ml_features_pca.shape[1]} components, {explained_variance:.1%} variance retained")
         
         return ml_features_pca
     
@@ -282,10 +282,10 @@ class DataPreprocessor:
         try:
             self.power_transformer = PowerTransformer(method='yeo-johnson', standardize=True)
             ml_features_transformed = self.power_transformer.fit_transform(ml_features_pca)
-            logger.info("⚡ Applied Yeo-Johnson power transformation")
+            logger.info("Applied Yeo-Johnson power transformation")
             return ml_features_transformed
         except Exception as e:
-            logger.warning(f"⚠️ Power transformation failed: {e}, using PCA features")
+            logger.warning(f"Power transformation failed: {e}, using PCA features")
             return ml_features_pca
 
 
@@ -301,7 +301,7 @@ def process_transaction_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, np.ndarray
         ml_features_processed: Обработанные данные для ML
         processing_info: Информация о preprocessing
     """
-    logger.info("🚀 Starting transaction data processing...")
+    logger.info("Starting transaction data processing...")
     
     # Feature Engineering
     feature_engineer = FeatureEngineer()
@@ -311,6 +311,6 @@ def process_transaction_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, np.ndarray
     preprocessor = DataPreprocessor()
     ml_features, ml_features_processed, processing_info = preprocessor.prepare_for_clustering(features_df)
     
-    logger.info("✅ Transaction data processing completed")
+    logger.info("Transaction data processing completed")
     
     return features_df, ml_features_processed, processing_info 

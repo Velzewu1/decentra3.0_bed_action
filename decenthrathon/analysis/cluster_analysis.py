@@ -5,7 +5,12 @@
 
 import pandas as pd
 import numpy as np
+import json
+import logging
 from typing import Dict, List
+from config import get_config
+
+logger = logging.getLogger(__name__)
 
 def analyze_clusters(features_df: pd.DataFrame, labels: np.ndarray) -> Dict:
     """
@@ -28,8 +33,8 @@ def analyze_clusters(features_df: pd.DataFrame, labels: np.ndarray) -> Dict:
     # Сравнительный анализ
     comparative_analysis = compare_clusters(cluster_profiles)
     
-    # Бизнес-рекомендации
-    business_recommendations = generate_business_recommendations(cluster_profiles)
+    # Бизнес-рекомендации через AI
+    business_recommendations = generate_ai_recommendations(cluster_profiles)
     
     # Прогноз поведения
     behavior_forecast = forecast_cluster_behavior(cluster_profiles)
@@ -143,6 +148,7 @@ def generate_segment_name(cluster_id: int, metrics: Dict, behavior: Dict, financ
     digital_usage = behavior['digital_wallet_usage']
     transactions = metrics['avg_transactions']
     sophistication = behavior['payment_sophistication']
+    clv = financial['clv']
     
     if cluster_id == 0:
         if digital_usage > 0.7 and avg_amount > 20000:
@@ -167,6 +173,38 @@ def generate_segment_name(cluster_id: int, metrics: Dict, behavior: Dict, financ
             return "Состоятельные Консервативные Клиенты"
         else:
             return "Умеренно Активные Клиенты"
+    
+    elif cluster_id == 3:
+        if digital_usage < 0.05 and transactions > 1500:
+            return "Традиционалисты с Умеренной Активностью"
+        elif digital_usage < 0.1:
+            return "Консервативные Офлайн-клиенты"
+        else:
+            return "Традиционные Банковские Клиенты"
+            
+    elif cluster_id == 4:
+        if avg_amount > 30000 and digital_usage > 0.5:
+            return "Цифровые Премиум-пользователи"
+        elif avg_amount > 25000:
+            return "Высокооплачиваемые Digital-клиенты"
+        else:
+            return "Состоятельные Цифровые Клиенты"
+            
+    elif cluster_id == 5:
+        if transactions > 8000 and digital_usage > 0.55:
+            return "Гиперактивные Digital-энтузиасты"
+        elif transactions > 5000:
+            return "Суперактивные Пользователи"
+        else:
+            return "Высокочастотные Digital-клиенты"
+            
+    elif cluster_id == 6:
+        if transactions > 15000 and digital_usage > 0.7:
+            return "Цифровые Транзакционные Лидеры"
+        elif digital_usage > 0.7:
+            return "Digital-first Максималисты"
+        else:
+            return "Ультраактивные Цифровые Клиенты"
     
     return f"Кластер {cluster_id}"
 
@@ -226,6 +264,69 @@ def generate_cluster_description(cluster_id: int, metrics: Dict, behavior: Dict,
 для cross-selling премиальных банковских продуктов.
         """
     
+    elif cluster_id == 3:
+        return f"""
+Кластер {cluster_id} объединяет {size} клиентов ({percentage:.1f}% базы) - консервативный 
+сегмент с минимальным использованием цифровых решений ({digital_usage:.1%} Digital Wallet).
+
+Характерные особенности:
+• Крайне низкое adoption цифровых платежных решений
+• Средний чек {avg_amount:,.0f} тенге при {avg_tx:.0f} транзакциях
+• Предпочтение традиционных способов оплаты
+• Contactless использование составляет {contactless:.1%}
+• CLV {clv:,.0f} тенге - потенциал для роста через обучение
+
+Сегмент требует специального подхода с акцентом на постепенную цифровизацию 
+и образовательные программы.
+        """
+    
+    elif cluster_id == 4:
+        return f"""
+Кластер {cluster_id} включает {size} клиентов ({percentage:.1f}% базы) - состоятельный 
+цифровой сегмент с высоким средним чеком {avg_amount:,.0f} тенге.
+
+Профиль сегмента:
+• Высокий средний чек при активном использовании Digital Wallet ({digital_usage:.1%})
+• {avg_tx:.0f} транзакций демонстрируют регулярную активность
+• Развитое contactless поведение ({contactless:.1%})
+• Отличный CLV {clv:,.0f} тенге благодаря сочетанию объема и частоты
+• Готовность к инновациям в банковской сфере
+
+Это премиальный digital-сегмент с высоким потенциалом для advanced продуктов.
+        """
+        
+    elif cluster_id == 5:
+        return f"""
+Кластер {cluster_id} представляет {size} клиентов ({percentage:.1f}% базы) - гиперактивный 
+сегмент с {avg_tx:.0f} транзакциями и высокой цифровизацией.
+
+Ключевые характеристики:
+• Максимальная транзакционная активность в базе
+• Высокое Digital Wallet adoption ({digital_usage:.1%})
+• Средний чек {avg_amount:,.0f} тенге при частом использовании
+• Продвинутое contactless поведение ({contactless:.1%})
+• Исключительный CLV {clv:,.0f} тенге за счет интенсивности
+
+Это "power users" с максимальной вовлеченностью в банковские сервисы и 
+готовностью к инновационным решениям.
+        """
+        
+    elif cluster_id == 6:
+        return f"""
+Кластер {cluster_id} объединяет {size} клиентов ({percentage:.1f}% базы) - ультраактивный 
+digital-first сегмент с {avg_tx:.0f} транзакциями.
+
+Отличительные особенности:
+• Рекордная транзакционная активность
+• Максимальное Digital Wallet использование ({digital_usage:.1%})
+• Несмотря на умеренный чек {avg_amount:,.0f} тенге, генерируют огромный CLV {clv:,.0f} тенге
+• Лидеры contactless adoption ({contactless:.1%})
+• Представляют будущее банковских услуг
+
+Этот сегмент - драйвер digital transformation и идеальная аудитория 
+для пилотирования новых технологических решений.
+        """
+    
     return f"Кластер {cluster_id}: {size} клиентов с базовыми характеристиками."
 
 def compare_clusters(cluster_profiles: Dict) -> Dict:
@@ -269,8 +370,118 @@ def compare_clusters(cluster_profiles: Dict) -> Dict:
     
     return comparison
 
-def generate_business_recommendations(cluster_profiles: Dict) -> Dict:
-    """Генерация бизнес-рекомендаций для каждого кластера"""
+def generate_ai_recommendations(cluster_profiles: Dict) -> Dict:
+    """Генерация бизнес-рекомендаций через OpenAI API"""
+    
+    config = get_config()
+    
+    if config.OPENAI_API_KEY == 'your-api-key-here':
+        logger.warning("OpenAI API key не настроен, используем fallback рекомендации")
+        return generate_business_recommendations_fallback(cluster_profiles)
+    
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=config.OPENAI_API_KEY)
+        
+        logger.info("🤖 Генерируем рекомендации через GPT-4...")
+        
+        # Подготавливаем данные для prompt
+        cluster_data = {}
+        for cluster_id, profile in cluster_profiles.items():
+            cluster_data[f"cluster_{cluster_id}"] = {
+                "segment_name": profile['segment_name'],
+                "size": profile['metrics']['size'],
+                "percentage": round(profile['metrics']['percentage'], 1),
+                "avg_amount": round(profile['metrics']['avg_amount'], 0),
+                "avg_transactions": round(profile['metrics']['avg_transactions'], 0),
+                "digital_wallet_usage": round(profile['behavior']['digital_wallet_usage'], 3),
+                "contactless_usage": round(profile['behavior']['contactless_usage'], 3),
+                "international_usage": round(profile['behavior']['international_usage'], 3),
+                "city_diversity": round(profile['behavior']['city_diversity'], 1),
+                "clv": round(profile['financial']['clv'], 0),
+                "payment_sophistication": round(profile['behavior']['payment_sophistication'], 2)
+            }
+        
+        prompt = f"""
+Ты - эксперт по банковскому customer segmentation. Проанализируй следующие кластеры клиентов казахстанского банка и создай для каждого:
+
+1. **Стратегические рекомендации** (5 конкретных действий с эмодзи)
+2. **Приоритет** (High/Medium/Standard)
+3. **Уровень инвестиций** (Premium/Standard)
+
+Данные по кластерам:
+{json.dumps(cluster_data, indent=2, ensure_ascii=False)}
+
+Контекст: 
+- Это банк в Казахстане (валюта - тенге)
+- Digital Wallet = использование цифровых кошельков
+- CLV = Customer Lifetime Value
+- Нужны практичные банковские рекомендации
+
+Верни JSON в формате:
+{{
+  "cluster_0": {{
+    "segment_name": "название из данных",
+    "recommendations": [
+      "🎯 **Категория**: Конкретное действие",
+      "💳 **Категория**: Конкретное действие", 
+      "📱 **Категория**: Конкретное действие",
+      "🏆 **Категория**: Конкретное действие",
+      "📊 **KPI фокус**: Конкретная метрика и цель"
+    ],
+    "priority": "High/Medium/Standard",
+    "investment_level": "Premium/Standard"
+  }}
+}}
+
+Используй такие категории как: Продуктовая стратегия, Cross-selling, Цифровизация, Монетизация, Retention, VIP-сервис, Wealth Management, Premium Banking, Международные услуги, Образовательные программы, Персональная поддержка, Омниканальность, Мотивационные программы, Innovation Lab, Speed Banking, AI Assistant, Business Solutions, Digital-first Strategy, Fintech Partnership, Predictive Banking, Community Building.
+"""
+        
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=[
+                {"role": "system", "content": "Ты эксперт банковского аналитика. Возвращай только валидный JSON без markdown форматирования."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=4000
+        )
+        
+        # Обрабатываем ответ
+        response_content = response.choices[0].message.content.strip()
+        
+        # Удаляем markdown форматирование если есть
+        if response_content.startswith('```json'):
+            response_content = response_content[7:]
+        if response_content.startswith('```'):
+            response_content = response_content[3:]
+        if response_content.endswith('```'):
+            response_content = response_content[:-3]
+        response_content = response_content.strip()
+        
+        recommendations = json.loads(response_content)
+        
+        # Преобразуем в нужный формат
+        formatted_recommendations = {}
+        for cluster_key, rec_data in recommendations.items():
+            cluster_id = int(cluster_key.split('_')[1])
+            formatted_recommendations[cluster_id] = {
+                'segment_name': cluster_profiles[cluster_id]['segment_name'],
+                'recommendations': rec_data['recommendations'],
+                'priority': rec_data['priority'],
+                'investment_level': rec_data.get('investment_level', 'Standard')
+            }
+        
+        logger.info("✅ GPT-4 рекомендации успешно сгенерированы")
+        return formatted_recommendations
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка генерации GPT-4 рекомендаций: {e}")
+        logger.info("🔄 Переходим на fallback рекомендации...")
+        return generate_business_recommendations_fallback(cluster_profiles)
+
+def generate_business_recommendations_fallback(cluster_profiles: Dict) -> Dict:
+    """Fallback генерация рекомендаций без OpenAI API"""
     
     recommendations = {}
     
@@ -308,6 +519,42 @@ def generate_business_recommendations(cluster_profiles: Dict) -> Dict:
                 "💎 **Premium Banking**: Exclusive карты и привилегии",
                 "🌍 **Международные услуги**: Travel-карты и валютные операции",
                 "📊 **KPI фокус**: Увеличение среднего чека на 10-15%"
+            ]
+        
+        elif cluster_id == 3:
+            cluster_recs = [
+                "🎓 **Образовательные программы**: Обучение основам цифрового банкинга",
+                "🤝 **Персональная поддержка**: Индивидуальные консультации по переходу",
+                "📞 **Омниканальность**: Интеграция традиционных и цифровых каналов",
+                "🎁 **Мотивационные программы**: Бонусы за использование digital-решений",
+                "📊 **KPI фокус**: Увеличение digital adoption с 1% до 15% за год"
+            ]
+            
+        elif cluster_id == 4:
+            cluster_recs = [
+                "💳 **Premium Digital**: Exclusive цифровые продукты и сервисы",
+                "🏆 **Персонализация**: AI-driven рекомендации и предложения",
+                "💰 **Wealth Tech**: Цифровые инвестиционные платформы",
+                "🌐 **Global Banking**: Международные digital-сервисы",
+                "📊 **KPI фокус**: Рост CLV на 20% через premium-продукты"
+            ]
+            
+        elif cluster_id == 5:
+            cluster_recs = [
+                "🚀 **Innovation Lab**: Бета-тестирование новых продуктов",
+                "⚡ **Speed Banking**: Мгновенные транзакции и сервисы",
+                "🤖 **AI Assistant**: Персональный банковский помощник",
+                "💳 **Business Solutions**: Корпоративные и предпринимательские продукты",
+                "📊 **KPI фокус**: Удержание через постоянные инновации (+30% engagement)"
+            ]
+            
+        elif cluster_id == 6:
+            cluster_recs = [
+                "🎯 **Digital-first Strategy**: Полностью цифровой customer journey",
+                "💡 **Fintech Partnership**: Интеграция с передовыми финтех-решениями",
+                "🔮 **Predictive Banking**: Упреждающие финансовые сервисы",
+                "👥 **Community Building**: Платформа для digital banking enthusiasts",
+                "📊 **KPI фокус**: Максимизация lifetime value через frequency (+40% transactions)"
             ]
         
         recommendations[cluster_id] = {
@@ -351,10 +598,46 @@ def forecast_cluster_behavior(cluster_profiles: Dict) -> Dict:
         elif cluster_id == 2:
             forecast = {
                 'growth_potential': 'Высокий (по value)',
-                'digital_adoption_forecast': 'Консервативное принятие при демонстрации ценности',
+                'digital_adoption_forecast': 'Умеренный рост digital adoption на 10-15%',
                 'revenue_forecast': 'Стабильный рост 8-12% с focus на premium продукты',
                 'churn_risk': 'Очень низкий',
                 'recommended_focus': 'Wealth management и VIP-сервис'
+            }
+        
+        elif cluster_id == 3:
+            forecast = {
+                'growth_potential': 'Средний (через образование)',
+                'digital_adoption_forecast': 'Медленный, но устойчивый рост с 1% до 15% за 2 года',
+                'revenue_forecast': 'Постепенный рост 5-8% при успешной цифровизации',
+                'churn_risk': 'Низкий (высокая лояльность к традиционным услугам)',
+                'recommended_focus': 'Образование и постепенная цифровая миграция'
+            }
+            
+        elif cluster_id == 4:
+            forecast = {
+                'growth_potential': 'Очень высокий',
+                'digital_adoption_forecast': 'Быстрое освоение premium digital-продуктов',
+                'revenue_forecast': 'Сильный рост 20-30% через премиальные сервисы',
+                'churn_risk': 'Низкий (высокая ценность предложения)',
+                'recommended_focus': 'Premium digital banking и wealth management'
+            }
+            
+        elif cluster_id == 5:
+            forecast = {
+                'growth_potential': 'Экстремально высокий',
+                'digital_adoption_forecast': 'Early adopters всех новых технологий',
+                'revenue_forecast': 'Взрывной рост 25-40% при правильной инновационной стратегии',
+                'churn_risk': 'Средне-высокий (нужны постоянные инновации)',
+                'recommended_focus': 'Cutting-edge технологии и инновационные продукты'
+            }
+            
+        elif cluster_id == 6:
+            forecast = {
+                'growth_potential': 'Максимальный',
+                'digital_adoption_forecast': 'Абсолютные лидеры digital transformation',
+                'revenue_forecast': 'Революционный рост 30-50% через frequency и новые продукты',
+                'churn_risk': 'Высокий (требует революционных решений)',
+                'recommended_focus': 'Полная digital transformation и fintech-инновации'
             }
         
         forecasts[cluster_id] = forecast

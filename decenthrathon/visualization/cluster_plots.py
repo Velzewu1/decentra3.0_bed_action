@@ -1,63 +1,81 @@
 #!/usr/bin/env python3
 """
-Модуль визуализации кластеров для хакатона
+Модуль визуализации кластеров
 """
 
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd
-import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-import plotly.express as px
+from typing import Tuple, Dict, Any
 import plotly.graph_objects as go
+import plotly.express as px
 from plotly.subplots import make_subplots
 import warnings
+from config import get_config
+
+# Убираем warnings
 warnings.filterwarnings('ignore')
 
-# Настройка стиля
-sns.set_theme()
+# Настраиваем стиль
+plt.style.use('seaborn-v0_8')
 sns.set_palette("husl")
 
 def create_cluster_visualizations(features_df: pd.DataFrame, ml_features_processed: np.ndarray, 
                                 labels: np.ndarray, output_dir: str = "."):
     """
-    Создание комплексной визуализации кластеров для хакатона
+    Создаем все визуализации кластеров
+    
+    Args:
+        features_df: DataFrame с признаками и метками кластеров
+        ml_features_processed: Обработанные ML признаки
+        labels: Метки кластеров
+        output_dir: Директория для сохранения файлов
+    
+    Returns:
+        DataFrame с добавленными метками кластеров
     """
     
-    print("🎨 СОЗДАНИЕ ВИЗУАЛИЗАЦИИ КЛАСТЕРОВ...")
+    print("СОЗДАНИЕ ВИЗУАЛИЗАЦИИ КЛАСТЕРОВ")
     print("="*50)
     
-    # Добавляем сегменты к данным
+    # Добавляем метки кластеров к признакам
     features_with_clusters = features_df.copy()
     features_with_clusters['cluster'] = labels
     
-    # 1. Обзорная визуализация кластеров
+    # Получаем конфигурацию для random_state
+    config = get_config()
+    random_state = config.RANDOM_STATE
+    
+    # 1. Обзорная визуализация
     create_cluster_overview(features_with_clusters, output_dir)
     
-    # 2. PCA визуализация в 2D и 3D
-    create_pca_visualization(ml_features_processed, labels, output_dir)
+    # 2. PCA визуализация
+    create_pca_visualization(ml_features_processed, labels, output_dir, random_state)
     
     # 3. t-SNE визуализация
-    create_tsne_visualization(ml_features_processed, labels, output_dir)
+    create_tsne_visualization(ml_features_processed, labels, output_dir, random_state)
     
-    # 4. Бизнес-метрики по кластерам
+    # 4. Бизнес-метрики
     create_business_metrics_plots(features_with_clusters, output_dir)
     
-    # 5. Детальные характеристики кластеров
+    # 5. Детальные характеристики
     create_cluster_characteristics(features_with_clusters, output_dir)
     
-    # 6. Интерактивная визуализация (Plotly)
+    # 6. Интерактивные графики (отключено)
     create_interactive_plots(features_with_clusters, ml_features_processed, labels, output_dir)
     
-    print("✅ Все визуализации созданы успешно!")
+    print("Все визуализации созданы!")
+    
     return features_with_clusters
 
 def create_cluster_overview(df: pd.DataFrame, output_dir: str):
     """Обзорная визуализация размеров и характеристик кластеров"""
     
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-    fig.suptitle('🎯 Обзор кластеров клиентов', fontsize=16, fontweight='bold')
+    fig.suptitle('Обзор кластеров клиентов', fontsize=16, fontweight='bold')
     
     # 1. Размеры кластеров
     cluster_sizes = df['cluster'].value_counts().sort_index()
@@ -91,21 +109,21 @@ def create_cluster_overview(df: pd.DataFrame, output_dir: str):
     plt.savefig(f'{output_dir}/cluster_overview.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("✅ Обзорная визуализация создана")
+    print("Обзорная визуализация создана")
 
-def create_pca_visualization(X: np.ndarray, labels: np.ndarray, output_dir: str):
+def create_pca_visualization(X: np.ndarray, labels: np.ndarray, output_dir: str, random_state: int):
     """PCA визуализация в 2D и 3D"""
     
     # PCA 2D
-    pca_2d = PCA(n_components=2, random_state=42)
+    pca_2d = PCA(n_components=2, random_state=random_state)
     X_pca_2d = pca_2d.fit_transform(X)
     
     # PCA 3D
-    pca_3d = PCA(n_components=3, random_state=42)
+    pca_3d = PCA(n_components=3, random_state=random_state)
     X_pca_3d = pca_3d.fit_transform(X)
     
     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-    fig.suptitle('📊 PCA Визуализация кластеров', fontsize=14, fontweight='bold')
+    fig.suptitle('PCA Визуализация кластеров', fontsize=14, fontweight='bold')
     
     colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
     
@@ -138,22 +156,22 @@ def create_pca_visualization(X: np.ndarray, labels: np.ndarray, output_dir: str)
     plt.savefig(f'{output_dir}/pca_visualization.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("✅ PCA визуализация создана")
+    print("PCA визуализация создана")
 
-def create_tsne_visualization(X: np.ndarray, labels: np.ndarray, output_dir: str):
+def create_tsne_visualization(X: np.ndarray, labels: np.ndarray, output_dir: str, random_state: int):
     """t-SNE визуализация для лучшего разделения кластеров"""
     
-    print("   🔄 Выполняется t-SNE (может занять время)...")
+    print("   Выполняется t-SNE (может занять время)")
     
     # t-SNE с разными параметрами
-    tsne_30 = TSNE(n_components=2, perplexity=30, random_state=42)
+    tsne_30 = TSNE(n_components=2, perplexity=30, random_state=random_state)
     X_tsne_30 = tsne_30.fit_transform(X)
     
-    tsne_50 = TSNE(n_components=2, perplexity=50, random_state=42)
+    tsne_50 = TSNE(n_components=2, perplexity=50, random_state=random_state)
     X_tsne_50 = tsne_50.fit_transform(X)
     
     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-    fig.suptitle('🧠 t-SNE Визуализация кластеров', fontsize=14, fontweight='bold')
+    fig.suptitle('t-SNE Визуализация кластеров', fontsize=14, fontweight='bold')
     
     colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
     
@@ -181,13 +199,13 @@ def create_tsne_visualization(X: np.ndarray, labels: np.ndarray, output_dir: str
     plt.savefig(f'{output_dir}/tsne_visualization.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("✅ t-SNE визуализация создана")
+    print("t-SNE визуализация создана")
 
 def create_business_metrics_plots(df: pd.DataFrame, output_dir: str):
     """Бизнес-метрики по кластерам"""
     
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig.suptitle('💼 Бизнес-характеристики кластеров', fontsize=16, fontweight='bold')
+    fig.suptitle('Бизнес-характеристики кластеров', fontsize=16, fontweight='bold')
     
     colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
     
@@ -237,13 +255,13 @@ def create_business_metrics_plots(df: pd.DataFrame, output_dir: str):
     plt.savefig(f'{output_dir}/business_metrics.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("✅ Бизнес-метрики созданы")
+    print("Бизнес-метрики созданы")
 
 def create_cluster_characteristics(df: pd.DataFrame, output_dir: str):
     """Детальные характеристики кластеров"""
     
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-    fig.suptitle('📈 Детальные характеристики кластеров', fontsize=16, fontweight='bold')
+    fig.suptitle('Детальные характеристики кластеров', fontsize=16, fontweight='bold')
     
     # 1. Boxplot средних чеков
     sns.boxplot(data=df, x='cluster', y='avg_amount', ax=axes[0,0])
@@ -280,15 +298,15 @@ def create_cluster_characteristics(df: pd.DataFrame, output_dir: str):
     plt.savefig(f'{output_dir}/cluster_characteristics.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("✅ Детальные характеристики созданы")
+    print("Детальные характеристики созданы")
 
 def create_interactive_plots(df: pd.DataFrame, X: np.ndarray, labels: np.ndarray, output_dir: str):
     """Интерактивные графики с Plotly (отключены для упрощения)"""
     # Отключено для упрощения - создаем только PNG файлы
-    print("✅ Интерактивные графики пропущены (создаются только PNG)")
+    print("Интерактивные графики пропущены (создаются только PNG)")
 
 def generate_cluster_summary_table(df: pd.DataFrame, output_dir: str):
-    """Генерация сводной таблицы характеристик кластеров (упрощенная)"""
+    """Генерируем сводную таблицу характеристик кластеров (упрощенная)"""
     # Возвращаем только DataFrame без сохранения в CSV
     summary_stats = []
     
@@ -313,5 +331,5 @@ def generate_cluster_summary_table(df: pd.DataFrame, output_dir: str):
         summary_stats.append(stats)
     
     summary_df = pd.DataFrame(summary_stats)
-    print("✅ Сводная таблица создана (только в памяти)")
+    print("Сводная таблица создана (только в памяти)")
     return summary_df 

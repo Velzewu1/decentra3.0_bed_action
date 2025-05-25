@@ -21,23 +21,23 @@ class Config:
         self.setup_feature_params()
         
     def load_environment(self):
-        """Загрузка переменных окружения"""
+        """Загружаем переменные окружения"""
         try:
             from dotenv import load_dotenv
             load_dotenv(dotenv_path='../.env')
-            print("✅ Environment variables loaded from .env file")
+            print("Environment variables загружены из .env файла")
         except ImportError:
-            print("⚠️ python-dotenv not installed, using system environment variables only")
+            print("python-dotenv не установлен, используем системные переменные")
         except Exception as e:
-            print(f"⚠️ Could not load .env file: {e}")
+            print(f"Не удалось загрузить .env файл: {e}")
             
         # OpenAI Configuration
         self.OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'your-api-key-here')
         if self.OPENAI_API_KEY == 'your-api-key-here':
-            print("⚠️ OpenAI API key not found in environment variables")
-            print("💡 Please add your API key to .env file: OPENAI_API_KEY=your-actual-key")
+            print("OpenAI API key не найден в переменных окружения")
+            print("Добавьте ваш API key в .env файл: OPENAI_API_KEY=your-actual-key")
         else:
-            print("✅ OpenAI API key loaded successfully")
+            print("OpenAI API key загружен успешно")
     
     def setup_paths(self):
         """Настройка путей к файлам"""
@@ -54,10 +54,16 @@ class Config:
         
     def setup_clustering_params(self):
         """Параметры для кластеризации"""
+        # Global random state for reproducibility
+        self.RANDOM_STATE = 42
+        
         # Clustering Configuration
         self.CLUSTERING_PARAMS = {
             # Выбор алгоритма: 'hdbscan', 'gmm', 'gmm_auto', 'kmeans'
             'algorithm': 'gmm_auto',  # Автоматическое определение количества компонентов через BIC/AIC
+            
+            # Global random state
+            'random_state': self.RANDOM_STATE,
             
             # HDBSCAN параметры (оставляем для совместимости)
             'min_cluster_size_range': [5, 10, 15, 20, 30, 50],
@@ -67,7 +73,7 @@ class Config:
             'metric': ['euclidean', 'manhattan'],
             'n_jobs': -1,
             'core_dist_n_jobs': -1,
-            'random_state': None,  # HDBSCAN в нашей версии не поддерживает random_state
+            # Примечание: HDBSCAN в некоторых версиях не поддерживает random_state
             
             # GMM параметры (ручной режим)
             'gmm_n_components_range': [3, 4, 5, 6, 7],
@@ -75,12 +81,12 @@ class Config:
             'gmm_init_params': 'kmeans',
             'gmm_max_iter': 100,
             'gmm_tol': 1e-3,
-            'gmm_random_state': 42,
+            'gmm_random_state': self.RANDOM_STATE,
             
             # GMM Auto параметры (автоматическое определение)
             'gmm_auto_min_components': 2,  # Минимальное количество компонентов для тестирования
             'gmm_auto_max_components': 8,  # Максимальное количество компонентов для тестирования  
-            'gmm_auto_criterion': 'combined',  # 'bic', 'aic', 'combined'
+            'gmm_auto_criterion': 'bic',  # 'bic', 'aic', 'combined' - меняем на BIC для получения большего количества кластеров
             # combined = 50% BIC + 30% balance + 20% silhouette
             
             # K-Means параметры (новые)
@@ -88,7 +94,7 @@ class Config:
             'kmeans_init': 'k-means++',
             'kmeans_n_init': 10,
             'kmeans_max_iter': 300,
-            'kmeans_random_state': 42,
+            'kmeans_random_state': self.RANDOM_STATE,
         }
         
         # Preprocessing parameters
@@ -96,7 +102,8 @@ class Config:
             'correlation_threshold': 0.8,
             'pca_variance_ratio': 0.95,
             'scaler_type': 'robust',  # or 'standard'
-            'power_transform': True
+            'power_transform': True,
+            'random_state': self.RANDOM_STATE  # Добавляем для PCA и других алгоритмов
         }
         
         # Grid search optimization
@@ -111,6 +118,23 @@ class Config:
                 'davies_bouldin_penalty': -0.3
             }
         }
+        
+    def update_random_state(self, new_seed: int):
+        """
+        Обновление random state для всех компонентов
+        
+        Args:
+            new_seed: Новое значение seed
+        """
+        self.RANDOM_STATE = new_seed
+        
+        # Обновляем все random_state параметры
+        self.CLUSTERING_PARAMS['random_state'] = new_seed
+        self.CLUSTERING_PARAMS['gmm_random_state'] = new_seed
+        self.CLUSTERING_PARAMS['kmeans_random_state'] = new_seed
+        self.PREPROCESSING['random_state'] = new_seed
+        
+        print(f"Configuration updated: RANDOM_STATE = {new_seed}")
         
     def setup_feature_params(self):
         """Параметры для feature engineering"""
@@ -150,13 +174,13 @@ class Config:
         return min(total, self.OPTIMIZATION['max_combinations'])
     
     def print_config_summary(self):
-        """Вывод краткой информации о конфигурации"""
-        print("🔧 CONFIGURATION SUMMARY:")
-        print(f"   📁 Data file: {self.DATA_FILE}")
-        print(f"   🎯 Random state: {self.CLUSTERING_PARAMS['random_state']}")
-        print(f"   🧬 Grid search combinations: {self.get_total_combinations()}")
-        print(f"   ⚡ Parallel jobs: {self.CLUSTERING_PARAMS['n_jobs']}")
-        print(f"   📊 PCA variance: {self.PREPROCESSING['pca_variance_ratio']}")
+        """Выводим краткую инфу о конфигурации"""
+        print("CONFIGURATION SUMMARY:")
+        print(f"   Файл данных: {self.DATA_FILE}")
+        print(f"   Random state: {self.RANDOM_STATE}")
+        print(f"   Grid search комбинации: {self.get_total_combinations()}")
+        print(f"   Параллельные задачи: {self.CLUSTERING_PARAMS['n_jobs']}")
+        print(f"   PCA variance: {self.PREPROCESSING['pca_variance_ratio']}")
 
 
 # Global configuration instance
